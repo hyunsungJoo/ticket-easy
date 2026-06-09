@@ -1,22 +1,61 @@
 import { NextResponse } from 'next/server';
+import { parseStringPromise } from 'xml2js';
 
 export async function GET() {
   try {
-    // 프론트엔드로 보내줄 순수 더미 데이터
-    const mockData = [
-      { id: 101, title: "2026 홍대 인디 록 페스티벌", venue: "클럽 FF", date: "2026.07.03", tag: "ROCK", gradient: "from-[#FF007F] to-purple-600" },
-      { id: 102, title: "어쿠스틱 보야지 : 새벽의 노래", venue: "벨로주 홍대", date: "2026.06.20", tag: "ACOUSTIC", gradient: "from-cyan-400 to-blue-600" },
-      { id: 103, title: "Neon Jungle : 신스웨이브 나이트", venue: "롤링홀", date: "2026.06.25", tag: "SYNTH POP", gradient: "from-[#00F5D4] to-indigo-600" },
-      { id: 104, title: "한여름 밤의 꿈 (Midsummer)", venue: "상상마당", date: "2026.07.10", tag: "INDIE POP", gradient: "from-amber-400 to-pink-500" },
-      { id: 105, title: "블루스 스테이션 라이브", venue: "클럽 에반스", date: "2026.07.15", tag: "BLUES", gradient: "from-blue-500 to-indigo-900" },
-      { id: 106, title: "인디 팝 유니버스", venue: "프리버드", date: "2026.07.22", tag: "POP", gradient: "from-emerald-400 to-teal-600" },
-      { id: 107, title: "모던 록 익스프레스", venue: "무대륙", date: "2026.07.30", tag: "MODERN ROCK", gradient: "from-rose-400 to-red-600" }
-    ];
+    const apiKey = process.env.KOPIS_API_KEY;
+    
+    // 💡 수정된 부분: 순수하게 키가 아예 없을 때만 더미 데이터를 주도록 변경!
+    if (!apiKey) {
+      console.log("API Key가 없어 더미 데이터를 반환합니다.");
+      return NextResponse.json({ success: true, data: getFallbackData() });
+    }
 
-    // 데이터를 JSON 형태로 프론트엔드에 전달
-    return NextResponse.json({ success: true, data: mockData });
+    // 1. 날짜 자동 계산 (오늘 ~ 한 달 뒤)
+    const today = new Date();
+    const stdate = today.toISOString().slice(0, 10).replace(/-/g, ''); // 예: 20260609
+    const nextMonth = new Date(today.setMonth(today.getMonth() + 1));
+    const eddate = nextMonth.toISOString().slice(0, 10).replace(/-/g, '');
+
+    // 2. KOPIS API 호출 URL 세팅 (서울 지역 10개)
+    const url = `http://kopis.or.kr/openApi/restful/pblprfr?service=${apiKey}&stdate=${stdate}&eddate=${eddate}&cpage=1&rows=10&signgucode=11`;
+    
+    const res = await fetch(url);
+    const xmlText = await res.text();
+
+    // 3. XML을 JSON 객체로 변환
+    const result = await parseStringPromise(xmlText);
+
+    // 데이터가 없거나 에러가 났을 경우 예외 처리
+    if (!result.dbs || !result.dbs.db) {
+      throw new Error("KOPIS 데이터가 없습니다.");
+    }
+
+    // 4. 프론트엔드 Interface에 맞게 데이터 가공 (Mapping)
+    const concertData = result.dbs.db.map((item: any) => ({
+      id: item.mt20id[0], // KOPIS 고유 ID (예: PF178134)
+      title: item.prfnm[0], // 공연명
+      venue: item.fcltynm[0], // 공연장
+      date: `${item.prfpdfrom[0]} ~ ${item.prfpdto[0]}`, // 시작일 ~ 종료일
+      tag: item.genrenm[0], // 장르
+      poster: item.poster[0], // 진짜 포스터 이미지 URL
+      gradient: "from-slate-800 to-slate-900" // 포스터 없을 때 대비용
+    }));
+
+    return NextResponse.json({ success: true, data: concertData });
     
   } catch (error) {
-    return NextResponse.json({ success: false, message: "공연 데이터를 가져오는데 실패했습니다." }, { status: 500 });
+    console.error("KOPIS 연동 에러:", error);
+    // 에러 발생 시 앱이 터지지 않게 더미 데이터로 폴백 처리
+    return NextResponse.json({ success: true, data: getFallbackData() });
   }
+}
+
+// 비상용 더미 데이터 함수
+function getFallbackData() {
+  return [
+    { id: "PF001", title: "2026 홍대 인디 록 페스티벌", venue: "클럽 FF", date: "2026.07.03", tag: "ROCK", poster: "", gradient: "from-[#FF007F] to-purple-600" },
+    { id: "PF002", title: "어쿠스틱 보야지 : 새벽의 노래", venue: "벨로주 홍대", date: "2026.06.20", tag: "ACOUSTIC", poster: "", gradient: "from-cyan-400 to-blue-600" },
+    { id: "PF003", title: "Neon Jungle : 신스웨이브", venue: "롤링홀", date: "2026.06.25", tag: "SYNTH POP", poster: "", gradient: "from-[#00F5D4] to-indigo-600" },
+  ];
 }

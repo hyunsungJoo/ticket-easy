@@ -3,12 +3,13 @@
 import React, { useEffect, useState } from "react";
 
 interface Concert {
-  id: number;
+  id: string; // KOPIS ID는 문자열
   title: string;
   venue: string;
   date: string;
   tag: string;
   gradient: string;
+  poster?: string; // 진짜 포스터 이미지 URL
 }
 
 export default function Home() {
@@ -21,7 +22,7 @@ export default function Home() {
   const [isHovered, setIsHovered] = useState(false);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
 
-  // 1. API 호출 및 초기 데이터 세팅 (오직 API만 믿고 감!)
+  // 1. API 호출 및 초기 데이터 세팅
   useEffect(() => {
     const fetchConcerts = async () => {
       try {
@@ -137,11 +138,19 @@ export default function Home() {
                   className="w-72 shrink-0 bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl hover:border-indigo-400 dark:hover:border-[#00F5D4]/50 hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
                 >
                   <div className={`h-40 bg-gradient-to-br ${concert.gradient} relative flex items-center justify-center p-4`}>
-                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300"></div>
+                    {/* 👇 포스터 이미지가 있으면 우선적으로 보여주는 부분 추가 */}
+                    {concert.poster && (
+                      <img 
+                        src={concert.poster} 
+                        alt={concert.title} 
+                        className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300" 
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors duration-300"></div>
                     <h3 className="text-lg font-black text-white text-center drop-shadow-md z-10 leading-tight group-hover:scale-105 transition-transform duration-300">
                       {concert.title}
                     </h3>
-                    <span className="absolute top-3 right-3 text-[10px] bg-black/60 text-white font-bold px-2 py-1 rounded backdrop-blur-sm">
+                    <span className="absolute top-3 right-3 text-[10px] bg-black/80 text-white font-bold px-2 py-1 rounded backdrop-blur-sm z-10">
                       {concert.tag}
                     </span>
                   </div>
