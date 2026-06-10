@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 /* 가로 스크롤바 숨기기 유틸리티 */
 @layer utilities {
   .scrollbar-hide::-webkit-scrollbar {

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-// 방금 만든 컴포넌트들을 불러오는 코드 추가! (경로는 폴더 구조에 맞게 수정)
 import { ThemeProvider } from "../components/ThemeProvider";
 import { ThemeToggle } from "../components/ThemeToggle";
 
@@ -15,8 +14,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    // 테마 전환 시 Next.js 경고를 막아주는 suppressHydrationWarning 추가
+    // 1) suppressHydrationWarning이 들어있어야 에러가 안 납니다.
     <html lang="ko" suppressHydrationWarning>
+      {/* 2) body 태그에 라이트모드 배경(bg-slate-50)과 다크모드 배경(dark:bg-[#0F172A])이 둘 다 지정되어야 합니다. */}
       <body className="bg-slate-50 text-slate-900 dark:bg-[#0F172A] dark:text-slate-100 min-h-screen font-sans antialiased transition-colors duration-300">
         <ThemeProvider
           attribute="class"
@@ -24,8 +24,6 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
-          {/* 공통 상단 GNB 헤더 */}
-          {/* 헤더의 배경색도 라이트모드/다크모드에 맞게 분리해 줬어 */}
           <header className="sticky top-0 z-50 bg-white/90 dark:bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80 px-6 py-4 flex justify-between items-center transition-colors duration-300">
             <div className="flex items-center gap-8">
               <a href="#" className="text-2xl font-black tracking-wider text-[#00F5D4]">INDIE_WAVE</a>
@@ -37,7 +35,7 @@ export default function RootLayout({
               </nav>
             </div>
             <div className="flex items-center gap-4">
-              {/* 여기에 다크모드 토글 버튼 추가! */}
+              {/* 3) 토글 버튼 컴포넌트가 정상적으로 들어가 있는지 확인 */}
               <ThemeToggle />
               
               <button className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">공연 등록/제휴</button>
@@ -47,10 +45,8 @@ export default function RootLayout({
             </div>
           </header>
 
-          {/* 실제 페이지 콘텐츠가 들어가는 자리 */}
           {children}
 
-          {/* 공통 하단 푸터 */}
           <footer className="mt-24 border-t border-slate-200 dark:border-slate-800/80 bg-slate-100 dark:bg-slate-950 text-slate-500 text-xs px-6 py-8 text-center space-y-2 transition-colors duration-300">
             <p className="font-bold text-slate-500 dark:text-slate-400">INDIE_WAVE — 홍대 인디 아티스트 및 소규모 콘서트 아카이브 프로젝트</p>
             <p>© 2026 INDIE_WAVE. Built for Music Lovers.</p>
