@@ -32,6 +32,7 @@ export default function RootLayout({
                 <a href="#" className="hover:text-[#00F5D4] transition">아티스트</a>
                 <a href="#" className="hover:text-[#00F5D4] transition">공연장 공간</a>
                 <a href="#" className="hover:text-[#00F5D4] transition">매거진</a>
+                <a href="#" className="hover:text-[#00F5D4] transition">테스트</a>
               </nav>
             </div>
             <div className="flex items-center gap-4">
